@@ -37,15 +37,16 @@ namespace Racuni
         }
         public bool dvig(double znesek)
         {
-            if (Limit > znesek)
+            if (Limit >= znesek && Stanje >= znesek)
             {
-                Stanje = Stanje - znesek;
+                Stanje -= znesek;
                 return true;
             }
             else
             {
                 return false;
             }
+
         }
         public int polog(double znesek)
         {
@@ -78,28 +79,43 @@ namespace Racuni
             Varcevalni=varcevalni;
             obrestnaMera=obresti;
         }
-
+        public double NastaviObrestnoMero()
+        {
+            if (Varcevalni == true)
+            {
+                return obrestnaMera=obrestnaMera * 1.5;
+            }
+            else
+            {
+                return obrestnaMera;
+            }
+        }
         public double LetniPrihranek(double mesecnoStanje)
         {
             return mesecnoStanje * obrestnaMera * 12;
         }
-        public double NastaviObrestnoMero()
-        {
-            if (Varcevalni = true)
-            {
-                return obrestnaMera * 1.5;
-            }
-            else
-            {
-                return 0;
-            }
-        }
+
     }
     public class ValutniRacun: Racun
     {
-        public List<string> seznamValut { get; set; }
-        public string primarnaValuta { set; get; }
 
+        private List<string> seznamValut = new List<string>() { "USD","GBP","EUR"};
+        
+        public List<string> SeznamValut
+        {
+            set
+            {
+               
+            }
+            get 
+            {
+                
+                return seznamValut; 
+            }
+
+        }
+
+        public string primarnaValuta { set; get; }
         public ValutniRacun()
         {
 
@@ -113,6 +129,7 @@ namespace Racuni
         }
         public ValutniRacun(double stanje, double limit, string ime, string priimek,string valuta) : base(stanje,limit,ime,priimek)
         {
+
             primarnaValuta = valuta;
         }
         public double zamenjajValuto(double menjalniTecaj)
@@ -123,7 +140,7 @@ namespace Racuni
     public class PoslovniRacun : Racun
     {
         public string nazivPodjetja { set; get; }
-        public List<string>tipPodjetja {get; set; }
+        public string tipPodjetja { set; get; }
 
         public PoslovniRacun()
         {
@@ -136,7 +153,7 @@ namespace Racuni
             Ime= ime;
             Priimek= priimek;
         }
-        public PoslovniRacun(double stanje, double limit, string ime, string priimek,string naziv,List<string>tip): base(stanje,limit,ime, priimek)
+        public PoslovniRacun(double stanje, double limit, string ime, string priimek,string naziv,string tip): base(stanje,limit,ime, priimek)
         {
             nazivPodjetja = naziv;
             tipPodjetja = tip;
