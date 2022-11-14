@@ -7,19 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace Racuni
 {
     public partial class Form1 : Form
     {
         Racun racun;
-        OsebniRacun OsRacun;
-        ValutniRacun valutniRacun= new ValutniRacun();
-        ValutniRacun valRacun;
-        PoslovniRacun posRacun;
        
         public Form1()
         {
+            racun = new ValutniRacun();
             InitializeComponent();
             PoUstvari.Enabled = false;
             ustvari.Enabled = false;
@@ -29,14 +27,18 @@ namespace Racuni
             znesekPolog.Text = 0.ToString();
             povpStanje.Text = 0.ToString();
             obrestnameraText.Text = 0.ToString();
-            foreach (string x in valutniRacun.SeznamValut)
+            if(racun is ValutniRacun)
             {
-                valuteListbox.Items.Add(x);
+                foreach (string x in (racun as ValutniRacun).SeznamValut)
+                {
+                    valuteListbox.Items.Add(x);
+                }
+                foreach (string x in (racun as ValutniRacun).SeznamValut)
+                {
+                    primarnaValuta.Items.Add(x);
+                }
             }
-            foreach (string x in valutniRacun.SeznamValut)
-            {
-                primarnaValuta.Items.Add(x);
-            }
+
             primarnaValuta.DropDownStyle = ComboBoxStyle.DropDownList;
 
         }
@@ -80,18 +82,21 @@ namespace Racuni
                     osebnigroup.Enabled = true;
                     valutnigroup.Enabled = false;
                     poslovnigroup.Enabled = false;
+                    racun = new OsebniRacun();
                 }
                 else if (pregled == "Poslovni račun")
                 {
                     poslovnigroup.Enabled = true;
                     valutnigroup.Enabled = false;
                     osebnigroup.Enabled = false;
+                    racun = new PoslovniRacun();
                 }
                 else if (pregled == "Valutni račun")
                 {
                     valutnigroup.Enabled = true;
                     poslovnigroup.Enabled = false;
                     osebnigroup.Enabled = false;
+                    racun = new ValutniRacun();
                 }
             }
             
@@ -100,20 +105,30 @@ namespace Racuni
         {
             try
             {
-                
-                int prev = 1;
+
+                int prev = 0;
                 var neki = imepriimek.Text.Split();
-                var ime = neki[0];
-                var priimek = neki[1];
                 var stan = Convert.ToDouble(stanje.Text);
                 var lim = Convert.ToDouble(limit.Text);
                 var obrest = Convert.ToDouble(obrestnameraText.Text) / 100;
                 var naz = imePodjetja.Text;
-                racun = new Racun(stan, lim, ime, priimek);
- 
+                var ime = "";
+                var priimek = "";
+                if (neki.Count() < 2)
+                {
+                    MessageBox.Show("Preverite vnos imena ali priimka","Napaka",MessageBoxButtons.OK,MessageBoxIcon.Asterisk);
+                }
+                else
+                {
+                    ime = neki[0];
+                    priimek= neki[1];
+                    prev= 1;
+                    racun = new Racun(stan, lim, ime, priimek);
+                }
                 if (prev == 1)
                 {
                     MessageBox.Show("Račun je bil uspešno ustvarjen");
+                    groupBox1.Enabled = false;
                     PoUstvari.Text = "Stanje: " + stan.ToString();
                     string pregled = vrsteRačunov.GetItemText(vrsteRačunov.SelectedItem);
                     if (pregled == "Osebni račun")
@@ -126,14 +141,14 @@ namespace Racuni
                         ValutniRacun.Enabled = false;
                         if (varčevalnicCheckbox.Checked == true)
                         {
-                            OsRacun = new OsebniRacun(stan, lim, ime, priimek, true, obrest);
-
+                            racun=new OsebniRacun(stan, lim, ime, priimek, true, obrest);
                         }
                         else
                         {
-                            OsRacun = new OsebniRacun(stan, lim, ime, priimek, false, obrest);
+                            racun = new OsebniRacun(stan, lim, ime, priimek, false, obrest);
 
-                        }             
+                        }     
+                        
 
                     }
                     else if (pregled == "Poslovni račun")
@@ -162,25 +177,33 @@ namespace Racuni
                              tip=SPradio.Text.ToString();
                         }
 
-                        posRacun = new PoslovniRacun(stan, lim, ime, priimek, naz, tip);
+                        racun = new PoslovniRacun(stan, lim, ime, priimek, naz, tip);
                     }
                     else if (pregled == "Valutni račun")
                     {
-                        var valuta = valuteListbox.SelectedItem.ToString();
-                        PoUstvari.Enabled = true;
-                        DvigGroup.Enabled = true;
-                        PologGroup.Enabled = true;
-                        OsebniRacun.Enabled = false;
-                        PoslovniRacun.Enabled = false;
-                        ValutniRacun.Enabled = true;
-                        valRacun = new ValutniRacun(stan, lim, ime, priimek, valuta);
+                        if (valuteListbox.SelectedIndex.ToString()==string.Empty)
+                        {
+                            MessageBox.Show("Napaka");
+                        }
+                        else
+                        {
+                            var valuta = valuteListbox.SelectedItem.ToString();
+                            PoUstvari.Enabled = true;
+                            DvigGroup.Enabled = true;
+                            PologGroup.Enabled = true;
+                            OsebniRacun.Enabled = false;
+                            PoslovniRacun.Enabled = false;
+                            ValutniRacun.Enabled = true;
+                            racun = new ValutniRacun(stan, lim, ime, priimek, valuta);
+
+                        }
                     }
                 }
                 else
                 {
                     MessageBox.Show("Račun ni bil ustvarjen");
                 }
-                groupBox1.Enabled = false;
+                label15.Text = obrestnameraText.Text;
 
             }
             catch (Exception ex)
@@ -228,7 +251,7 @@ namespace Racuni
         private void prihranekButton_Click(object sender, EventArgs e)
         {
 
-            MessageBox.Show("Vaš letni prihranek je " + OsRacun.LetniPrihranek(Convert.ToDouble(povpStanje.Text)).ToString()+"€", "Letni Prihranek", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Vaš letni prihranek je " + (racun as OsebniRacun).LetniPrihranek(Convert.ToDouble(povpStanje.Text)).ToString()+"€", "Letni Prihranek", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void label4_Click(object sender, EventArgs e)
@@ -249,10 +272,20 @@ namespace Racuni
 
         private void povečajButton_Click(object sender, EventArgs e)
         {
-            OsRacun.NastaviObrestnoMero();
-            double a = Math.Round( OsRacun.obrestnaMera * 100,2);
+            if ((racun as OsebniRacun).obrestnaMera <= 0)
+            {
+                (racun as OsebniRacun).obrestnaMera = 0.05;
+                (racun as OsebniRacun).NastaviObrestnoMero();
+                double a = Math.Round((racun as OsebniRacun).obrestnaMera * 100, 2);
+                label15.Text = a.ToString() + "%";
+            }
+            else
+            {
+                (racun as OsebniRacun).NastaviObrestnoMero();
+                double a = Math.Round((racun as OsebniRacun).obrestnaMera * 100, 2);
+                label15.Text = a.ToString() + "%";
+            }
             
-            label15.Text = a.ToString()+"%";
         }
 
         private void label8_Click(object sender, EventArgs e)
@@ -269,17 +302,21 @@ namespace Racuni
             }
             else
             {
-                valutniRacun.SeznamValut.Add(dodaj);
-                valuteListbox.Items.Clear();
-                foreach (string x in valutniRacun.SeznamValut)
+                if(racun is ValutniRacun)
                 {
-                    valuteListbox.Items.Add(x);
+                    (racun as ValutniRacun).SeznamValut.Add(dodaj);
+                    valuteListbox.Items.Clear();
+                    foreach (string x in (racun as ValutniRacun).SeznamValut)
+                    {
+                        valuteListbox.Items.Add(x);
+                    }
+                    primarnaValuta.Items.Clear();
+                    foreach (string x in (racun as ValutniRacun).SeznamValut)
+                    {
+                        primarnaValuta.Items.Add(x);
+                    }
                 }
-                primarnaValuta.Items.Clear();
-                foreach (string x in valutniRacun.SeznamValut)
-                {
-                    primarnaValuta.Items.Add(x);
-                }
+
             }
 
             
@@ -293,7 +330,8 @@ namespace Racuni
 
         private void zamenjajValuto_Click(object sender, EventArgs e)
         {
-           double menjaj = Convert.ToDouble(menjajText.Text);
+            menjajText.Text.Replace(".", ",");
+            double menjaj = Convert.ToDouble(menjajText.Text);
             if(menjajText.Text == string.Empty)
             {
                 MessageBox.Show("Polje za dodajanje je prazno", "Prazno polje", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
@@ -302,14 +340,15 @@ namespace Racuni
             else
             {
                 
-                PoUstvari.Text = ("Stanje: "+valRacun.zamenjajValuto(menjaj)).ToString();
+                PoUstvari.Text = ("Stanje: "+ (racun as ValutniRacun).zamenjajValuto(menjaj)).ToString(); //preveri, katerega tipa je -> if(racun is ValutniRacun) ...
+                // (racun as ValutniRacun).
             }
             
         }
 
         private void likvidno_Click(object sender, EventArgs e)
         {
-            if (posRacun.Likvidno() == true)
+            if ((racun as PoslovniRacun).Likvidno() == true)
             {
                 MessageBox.Show("Račun je likviden", "Likvidnost", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -317,6 +356,11 @@ namespace Racuni
             {
                 MessageBox.Show("Račun ni likviden", "Likvidnost", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+        }
+
+        private void valutaText_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

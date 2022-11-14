@@ -60,7 +60,7 @@ namespace Racuni
         public bool Varcevalni { set; get; }
         public double obrestnaMera { set; get; }
 
-        public OsebniRacun()
+        public OsebniRacun():base()
         {
             Varcevalni = false;
             obrestnaMera = 0;
@@ -108,11 +108,9 @@ namespace Racuni
                
             }
             get 
-            {
-                
+            {  
                 return seznamValut; 
             }
-
         }
 
         public string primarnaValuta { set; get; }
